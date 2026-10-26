@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Складъ.рус — Умный учет и компьютерное зрение</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --text-main: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --primary: #0284c7;
+      --primary-light: #e0f2fe;
+      --success: #16a34a;
+      --success-light: #dcfce7;
+      --warning: #d97706;
+      --warning-light: #fef3c7;
+      --danger: #dc2626;
+      --border-light: #e2e8f0;
+      --border-focus: #0284c7;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Шапка сайта */
+    .header-bar {
+      height: 72px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 36px;
+      flex-shrink: 0;
+      box-shadow: var(--shadow-sm);
+      z-index: 50;
+    }
+
+    .brand-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-logo-img {
+      height: 48px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .brand-text-block {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .brand-title span {
+      color: var(--primary);
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    /* Вкладки слайдов */
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      background: var(--bg-page);
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid var(--border-light);
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      padding: 8px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+    }
+
+    .tab-btn.active {
+      background: #ffffff;
+      color: var(--primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .lab-status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: var(--success-light);
+      color: var(--success);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-weight: 700;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    /* Слайдовое рабочее пространство */
+    .viewport {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide-page {
+      position: absolute;
+      inset: 0;
+      padding: 28px 40px;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(8px);
+      transition: all 0.25s ease-out;
+    }
+
+    .slide-page.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    /* СЛАЙД 1: Реальные тесты и софт прямо на старте */
+    .screen-stage-layout {
+      display: grid;
+      grid-template-columns: 1fr 390px;
+      gap: 28px;
+      height: 100%;
+    }
+
+    .viewer-card {
+      background: #ffffff;
+      border: 1px solid var(--border-light);
+      border-radius: 14px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .viewer-header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-light);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .viewer-title {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .viewer-screen-container {
+      flex: 1;
+      background: #0f172a;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .main-screen-img {
+      max-width: 100%;
+      max-height: 100%;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* Разовый луч сканирования */
+    .single-scan-line {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: #00f0ff;
+      box-shadow: 0 0 15px #00f0ff, 0 0 5px #fff;
+      top: -10px;
+      opacity: 0;
+      z-index: 20;
+      pointer-events: none;
+    }
+
+    /* Анимация ровно на один проход */
+    .single-scan-line.scanning {
+      animation: scanOnce 1.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
+
+    @keyframes scanOnce {
+      0% { top: 0%; opacity: 1; }
+      85% { top: 98%; opacity: 1; }
+      100% { top: 100%; opacity: 0; }
+    }
+
+    .viewer-footer-bar {
+      background: #ffffff;
+      border-top: 1px solid var(--border-light);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+    }
+
+    /* Боковая панель переключения тестов */
+    .sidebar-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .sidebar-intro {
+      background: #ffffff;
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+      padding: 16px 20px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .sidebar-intro h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text-main);
+    }
+
+    .sidebar-intro p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .test-switcher-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+    }
+
+    /* Кнопки переключения - яркие, с очевидным кликом */
+    .test-card-btn {
+      background: #ffffff;
+      border: 2px solid var(--border-light);
+      border-radius: 12px;
+      padding: 14px 18px;
+      text-align: left;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .test-card-btn:hover {
+      border-color: #93c5fd;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .test-card-btn.active {
+      border-color: var(--primary);
+      background: #f0f9ff;
+    }
+
+    .test-card-btn.active::after {
+      content: "✓ ВЫБРАНО";
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--primary);
+      background: #e0f2fe;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .test-btn-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+
+    .test-btn-metric {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--primary);
+      font-weight: 600;
+      display: flex;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .test-btn-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    .scan-trigger-btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 10px rgba(2, 132, 199, 0.25);
+      transition: background 0.2s;
+    }
+
+    .scan-trigger-btn:hover {
+      background: #0369a1;
+    }
+
+    /* СЛАЙД 2: 4 Ключевые Задачи */
+    .tasks-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .section-headline {
+      margin-bottom: 24px;
+    }
+
+    .section-headline h2 {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.5px;
+    }
+
+    .section-headline p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .tasks-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 20px;
+      flex: 1;
+    }
+
+    .task-item {
+      background: #ffffff;
+      border: 1px solid var(--border-light);
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-left: 4px solid var(--primary);
+    }
+
+    .task-badge-num {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--primary);
+      background: var(--primary-light);
+      padding: 3px 8px;
+      border-radius: 4px;
+      width: fit-content;
+      margin-bottom: 12px;
+    }
+
+    .task-item h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+
+    .task-item p {
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text-secondary);
+    }
+
+    .task-benefit {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-light);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--success);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* СЛАЙД 3: Интеграция 1С */
+    .integration-layout-clean {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      height: 100%;
+    }
+
+    .integration-pane {
+      background: #ffffff;
+      border: 1px solid var(--border-light);
+      border-radius: 14px;
+      padding: 28px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .integration-pane.highlight-pane {
+      border: 2px solid #bae6fd;
+      background: #f8fafc;
+    }
+
+    .pill-tag {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      display: inline-block;
+      margin-bottom: 16px;
+      width: fit-content;
+    }
+
+    .pill-yellow { background: var(--warning-light); color: var(--warning); }
+    .pill-blue { background: var(--primary-light); color: var(--primary); }
+
+    .feature-points {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .feature-points li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 14px;
+      line-height: 1.4;
+      color: var(--text-main);
+    }
+
+    .feature-points li span.icon-check {
+      background: var(--success-light);
+      color: var(--success);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .ocr-sample-box {
+      background: #ffffff;
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 20px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    /* Нижний футер навигации */
+    .footer-bar {
+      height: 56px;
+      background: #ffffff;
+      border-top: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 36px;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .nav-guide {
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nav-guide kbd {
+      background: var(--bg-page);
+      border: 1px solid var(--border-light);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .btn-step {
+      background: #ffffff;
+      border: 1px solid var(--border-light);
+      padding: 7px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+    }
+
+    .btn-step:hover {
+      background: var(--bg-page);
+      color: var(--text-main);
+    }
+
+    .btn-step.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn-step.primary:hover {
+      background: #0369a1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ШАПКА -->
+  <header class="header-bar">
+    <div class="brand-container">
+      <!-- Логотип из папки public/logo.png -->
+      <img src="public/logo.png" alt="Складъ" class="brand-logo-img" onerror="this.style.display='none'; document.getElementById('alt-brand').style.display='block';">
+      <div id="alt-brand" style="display:none; font-weight:800; font-size:22px; color:var(--text-main);">Складъ</div>
+      
+      <div class="brand-text-block">
+        <div class="brand-title">Складъ<span>.рус</span></div>
+        <div class="brand-sub">Система машинного зрения для склада</div>
+      </div>
+    </div>
+
+    <!-- Переключатели слайдов -->
+    <nav class="nav-tabs">
+      <button class="tab-btn active" onclick="goToSlide(0)">
+        <span>1.</span> Реальные тесты софта
+      </button>
+      <button class="tab-btn" onclick="goToSlide(1)">
+        <span>2.</span> 4 Задачи склада
+      </button>
+      <button class="tab-btn" onclick="goToSlide(2)">
+        <span>3.</span> Интеграция с 1С
+      </button>
+    </nav>
+
+    <div class="lab-status-badge">
+      <div class="status-dot"></div>
+      FALCON Vision Lab v1.0
+    </div>
+  </header>
+
+  <!-- СЛАЙДЫ -->
+  <main class="viewport">
+
+    <!-- СЛАЙД 1: РЕАЛЬНЫЕ ТЕСТЫ (СРАЗУ НА ПЕРВОМ СЛАЙДЕ) -->
+    <section class="slide-page active" id="slide-0">
+      <div class="screen-stage-layout">
+        
+        <!-- Окно просмотра фото-теста -->
+        <div class="viewer-card">
+          <div class="viewer-header">
+            <div class="viewer-title" id="stage-caption">
+              <span>● РАСПОЗНАВАНИЕ: СТЕЛЛАЖ STELLOX</span>
+            </div>
+            <div style="font-family: var(--font-mono); font-size: 12px; color: var(--success); font-weight:700;" id="stage-badge">
+              ЗАПОЛНЕНИЕ: 65.8% | НАЙДЕНО: 19 SKU
+            </div>
+          </div>
+
+          <div class="viewer-screen-container">
+            <img id="main-test-view" src="public/screen1.jpg" class="main-screen-img" alt="Тест софта" onerror="this.alt='Поместите screen1.jpg, screen2.jpg, screen3.jpg в папку public/'">
+            <!-- Одиночная полоса сканирования -->
+            <div id="laser-line" class="single-scan-line"></div>
+          </div>
+
+          <div class="viewer-footer-bar">
+            <span style="color: var(--text-secondary); font-size: 12px;">Камера / Полка: <b>FALCON Warehouse Vision Lab</b></span>
+            <span style="font-family: var(--font-mono); font-size: 12px; color: var(--primary);" id="stage-ocr-status">
+              Точность матчинга SKU: 100.0%
+            </span>
+          </div>
+        </div>
+
+        <!-- Очевидные кликабельные кнопки переключения скриншотов -->
+        <div class="sidebar-controls">
+          <div class="sidebar-intro">
+            <h3>Живые доказательства работы</h3>
+            <p>
+              Никаких абстрактных картинок. Ниже — реальные протоколы сканирования из нашей программы: сопоставление деталей и тепловая карта заполнения полок.
+            </p>
+          </div>
+
+          <div class="test-switcher-list">
+            
+            <!-- КНОПКА ТЕСТ 1 -->
+            <button class="test-card-btn active" onclick="selectTestCase(1, 'public/screen1.jpg', '● ТЕСТ 1: СТЕЛЛАЖ С ДЕТАЛЯМИ STELLOX', 'ЗАПОЛНЕНИЕ ПОЛКИ: 65.8% | 19 SKU', 'Точность матчинга: 100.0%')">
+              <div class="test-btn-title">Тест 1: Запчасти STELLOX</div>
+              <div class="test-btn-metric">Заполнение: 65.8% • 19 SKU</div>
+              <div class="test-btn-desc">
+                Распознаны все артикулы (56-04124-SX и др.). Построена глубинная Z-карта пустот на полке.
+              </div>
+            </button>
+
+            <!-- КНОПКА ТЕСТ 2 -->
+            <button class="test-card-btn" onclick="selectTestCase(2, 'public/screen2.jpg', '● ТЕСТ 2: КОРОБКИ DOLZ (ПЕРЕВЕРНУТЫЕ)', 'ЗАПОЛНЕНИЕ: 100.0% | СТАТУС: ТОЧНО', 'Артикул M212 распознан вверх ногами')">
+              <div class="test-btn-title">Тест 2: DOLZ (Перевернутый текст)</div>
+              <div class="test-btn-metric">Заполнение: 100.0% • Матч: ТОЧНО</div>
+              <div class="test-btn-desc">
+                Коробка стоит «вверх ногами». Нейросеть корректно распознала артикул M212 без ошибок.
+              </div>
+            </button>
+
+            <!-- КНОПКА ТЕСТ 3 -->
+            <button class="test-card-btn" onclick="selectTestCase(3, 'public/screen3.jpg', '● ТЕСТ 3: ПЛОТНЫЙ СТЕЛЛАЖ OCAP (51 ДЕТАЛЬ)', 'ЗАПОЛНЕНИЕ: 82.4% | НАЙДЕНО: 51 ОБЪЕКТ', 'Высокая плотность выкладки')">
+              <div class="test-btn-title">Тест 3: Плотная выкладка OCAP</div>
+              <div class="test-btn-metric">Заполнение: 82.4% • 51 объект</div>
+              <div class="test-btn-desc">
+                Массовое распознавание плотной полки. Мгновенная фиксация артикулов OCAP 0501034.
+              </div>
+            </button>
+
+          </div>
+
+          <!-- Кнопка однократного запуска лазера -->
+          <button class="scan-trigger-btn" onclick="triggerLaserScan()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="12" y1="3" x2="12" y2="21"></line></svg>
+            Запустить сканирование (1 проход)
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- СЛАЙД 2: 4 КЛЮЧЕВЫЕ ЗАДАЧИ СИСТЕМЫ -->
+    <section class="slide-page" id="slide-1">
+      <div class="tasks-container">
+        <div class="section-headline">
+          <h2>4 ключевые задачи, которые решает система</h2>
+          <p>Автоматизация рутинных складских операций с помощью видеокамер или обычных смартфонов</p>
+        </div>
+
+        <div class="tasks-cards-grid">
+          
+          <!-- Задача 1 -->
+          <div class="task-item">
+            <div>
+              <div class="task-badge-num">ЗАДАЧА №1</div>
+              <h3>Проверка сборки заказов (Исключение пересорта)</h3>
+              <p>
+                Камера мгновенно считывает названия, артикулы и маркировку со всех коробок в собранном заказе, сверяет их с накладной из 1С и сразу показывает: заказ собран верно или положена чужая деталь.
+              </p>
+            </div>
+            <div class="task-benefit">
+              ✔ Ноль претензий от клиентов по причине человеческого фактора
+            </div>
+          </div>
+
+          <!-- Задача 2 -->
+          <div class="task-item">
+            <div>
+              <div class="task-badge-num">ЗАДАЧА №2</div>
+              <h3>Быстрый поиск товара на стеллажах (Помощник)</h3>
+              <p>
+                Кладовщик вводит нужный артикул и ведет камерой смартфона вдоль полки. Программа сама находит нужный товар, подсвечивает его на экране и подает звуковой сигнал.
+              </p>
+            </div>
+            <div class="task-benefit">
+              ✔ Поиск нужной коробки среди 100 похожих за 2-3 секунды
+            </div>
+          </div>
+
+          <!-- Задача 3 -->
+          <div class="task-item">
+            <div>
+              <div class="task-badge-num">ЗАДАЧА №3</div>
+              <h3>Оценка заполняемости полок и стеллажей</h3>
+              <p>
+                Система анализирует свободное пространство на стеллажах по видео/фото и вычисляет процент заполнения полок, помогая эффективно использовать складские площади и находить пустые места.
+              </p>
+            </div>
+            <div class="task-benefit">
+              ✔ Точная тепловая Z-карта загрузки каждого яруса
+            </div>
+          </div>
+
+          <!-- Задача 4 -->
+          <div class="task-item">
+            <div>
+              <div class="task-badge-num">ЗАДАЧА №4</div>
+              <h3>Быстрая инвентаризация остатков на ходу</h3>
+              <p>
+                Сотрудник проходит вдоль рядов с включенной камерой. Программа распознает все стоящие на полках коробки, считывает их данные, считает точное количество и автоматически формирует ведомость расхождений с базой 1С.
+              </p>
+            </div>
+            <div class="task-benefit">
+              ✔ Инвентаризация без остановки склада и ночных смен
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- СЛАЙД 3: ИНТЕГРАЦИЯ С 1С -->
+    <section class="slide-page" id="slide-2">
+      <div class="section-headline">
+        <h2>Интеграция с вашей базой 1С и маркировкой</h2>
+        <p>Прямая синхронизация данных без ручного переноса таблиц и лишних посредников</p>
+      </div>
+
+      <div class="integration-layout-clean">
+        
+        <div class="integration-pane">
+          <div>
+            <div class="pill-tag pill-yellow">1С:ПРЕДПРИЯТИЕ // ПРЯМОЙ ОБМЕН</div>
+            <h3 style="font-size: 20px; margin-bottom: 10px; color: var(--text-main);">Что система забирает из базы 1С:</h3>
+            <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.5;">
+              Программа напрямую подключается к вашей базе 1С. Она сопоставляет видеоряд с официальными справочниками компании:
+            </p>
+
+            <ul class="feature-points">
+              <li>
+                <span class="icon-check">✓</span>
+                <div><b>Справочники номенклатуры:</b> названия, официальные артикулы брендов.</div>
+              </li>
+              <li>
+                <span class="icon-check">✓</span>
+                <div><b>Таблицы аналогов (кросс-номера):</b> автоматическое определение совместимых замен.</div>
+              </li>
+              <li>
+                <span class="icon-check">✓</span>
+                <div><b>Штрихкоды и коды упаковки:</b> EAN-13, ITF-14.</div>
+              </li>
+              <li>
+                <span class="icon-check">✓</span>
+                <div><b>Обязательная маркировка:</b> коды DataMatrix («Честный ЗНАК»).</div>
+              </li>
+            </ul>
+          </div>
+
+          <div style="font-size: 13px; color: var(--text-muted); border-top: 1px solid var(--border-light); padding-top: 14px;">
+            Совместимо с конфигурациями: 1С:Управление торговлей, 1С:ERP, 1С:Комплексная автоматизация, 1С:УНФ.
+          </div>
+        </div>
+
+        <div class="integration-pane highlight-pane">
+          <div>
+            <div class="pill-tag pill-blue">КОМПЬЮТЕРНОЕ ЗРЕНИЕ В ДЕЛЕ</div>
+            <h3 style="font-size: 20px; margin-bottom: 10px; color: var(--text-main);">Автоматическая сверка с видеокамеры:</h3>
+            <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.5;">
+              Камера мгновенно распознает сырой текст с коробок и сопоставляет его со строками накладной из 1С:
+            </p>
+
+            <div class="ocr-sample-box">
+              <div style="color: var(--primary); font-weight: 700; margin-bottom: 8px;">=== СВЕРКА В РЕАЛЬНОМ ВРЕМЕНИ ===</div>
+              <div>Распознано с коробки: <b>STELLOX 56-04124-SX</b></div>
+              <div>Позиция в накладной 1С: <span style="color: var(--success); font-weight:700;">№12 Найдена (1 шт)</span></div>
+              <div>Статус проверки: <span style="color: var(--success); font-weight: 700;">СОВПАДАЕТ НА 100%</span></div>
+              <div style="margin-top: 8px; color: var(--text-muted); font-size: 11px;">Сырой OCR: 56-04124-SX STCLOR 66-00935-SX</div>
+            </div>
+          </div>
+
+          <div style="background: #ffffff; border: 1px solid var(--border-light); border-radius: 8px; padding: 14px; font-size: 13px;">
+            <b>Экономия бюджета:</b> Не требуется покупка дорогостоящих терминалов сбора данных (ТСД) по 60 000 – 100 000 ₽ за штуку. Достаточно смартфона сотрудника или веб-камеры.
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ФУТЕР -->
+  <footer class="footer-bar">
+    <div class="nav-guide">
+      Управление: клавиши <kbd>←</kbd> <kbd>→</kbd> на клавиатуре или клик по верхним вкладкам
+    </div>
+
+    <div>
+      <button class="btn-step" onclick="prevSlide()">← Назад</button>
+      <button class="btn-step primary" onclick="nextSlide()">Вперед →</button>
+    </div>
+  </footer>
+
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide-page');
+    const tabs = document.querySelectorAll('.tab-btn');
+
+    function updateSlideView() {
+      slides.forEach((s, idx) => {
+        s.classList.toggle('active', idx === currentSlide);
+      });
+      tabs.forEach((t, idx) => {
+        t.classList.toggle('active', idx === currentSlide);
+      });
+    }
+
+    function goToSlide(index) {
+      if (index >= 0 && index < slides.length) {
+        currentSlide = index;
+        updateSlideView();
+      }
+    }
+
+    function nextSlide() {
+      if (currentSlide < slides.length - 1) {
+        currentSlide++;
+        updateSlideView();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateSlideView();
+      }
+    }
+
+    // Клавиатура
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        prevSlide();
+      }
+    });
+
+    // Однократный запуск лазера
+    function triggerLaserScan() {
+      const laser = document.getElementById('laser-line');
+      if (!laser) return;
+      laser.classList.remove('scanning');
+      void laser.offsetWidth; // сброс css-анимации
+      laser.classList.add('scanning');
+    }
+
+    // Переключение тестов с обновлением инфо и запуском разового сканирования
+    function selectTestCase(testNum, imgSrc, caption, badgeText, ocrStatus) {
+      const img = document.getElementById('main-test-view');
+      const cap = document.getElementById('stage-caption');
+      const badge = document.getElementById('stage-badge');
+      const ocr = document.getElementById('stage-ocr-status');
+
+      if (img) img.src = imgSrc;
+      if (cap) cap.innerHTML = `<span>${caption}</span>`;
+      if (badge) badge.innerText = badgeText;
+      if (ocr) ocr.innerText = ocrStatus;
+
+      // Обновляем активную кнопку
+      const buttons = document.querySelectorAll('.test-card-btn');
+      buttons.forEach((btn, idx) => {
+        btn.classList.toggle('active', idx === (testNum - 1));
+      });
+
+      // Запускаем лазер ровно один раз
+      triggerLaserScan();
+    }
+
+    // Запуск сканирования при первой загрузке страницы
+    window.addEventListener('load', () => {
+      setTimeout(triggerLaserScan, 400);
+    });
+  </script>
+</body>
+</html>
